@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "id": "midnight",
+  "name": { "zh": "深夜台场", "ja": "深夜の台場" },
+  "colors": {
+    "background": "#12131a",
+    "surface": "#1d1f2b",
+    "text": "#eceaf3",
+    "muted": "#9a97ab",
+    "accent": "#c8a24a",
+    "border": "#2f3244"
+  }
+}

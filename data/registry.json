@@ -1,0 +1,13 @@
+{
+  "decks": ["decks/runes24.json", "decks/story24.json", "decks/tarot22.json"],
+  "layouts": ["layouts/odaiba6.json"],
+  "interpretations": ["interpretations/story.json", "interpretations/oracle.json"],
+  "themes": ["themes/ink.json", "themes/midnight.json"],
+  "copy": "copy.json",
+  "defaults": {
+    "deck": "runes24",
+    "layout": "odaiba6",
+    "interpretation": "story",
+    "theme": "ink"
+  }
+}

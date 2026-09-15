@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "id": "ink",
+  "name": { "zh": "墨与纸", "ja": "墨と紙" },
+  "colors": {
+    "background": "#f6f2e8",
+    "surface": "#fffdf6",
+    "text": "#2b2622",
+    "muted": "#8a8177",
+    "accent": "#8c2f28",
+    "border": "#e0d7c5"
+  }
+}

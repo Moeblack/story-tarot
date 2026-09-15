@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://story-tarot.local/schemas/layout.schema.json",
+  "title": "Layout",
+  "description": "一套位置方案（几号位、什么含义、摆在牌桌的哪里）。对应 src/shared/types.ts 的 Layout 与 Slot。抽到的牌按 order 递增落到各位置，永不按牌面重排。",
+  "type": "object",
+  "required": ["schemaVersion", "id", "name", "description", "slots"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "id": { "$ref": "#/$defs/id" },
+    "name": { "$ref": "#/$defs/localized" },
+    "description": { "$ref": "#/$defs/localized" },
+    "slots": {
+      "type": "array",
+      "minItems": 1,
+      "description": "位置列表。id 必须唯一，order 必须唯一。",
+      "items": { "$ref": "#/$defs/slot" }
+    }
+  },
+  "$defs": {
+    "localized": {
+      "title": "Localized",
+      "type": "object",
+      "required": ["zh", "ja"],
+      "additionalProperties": false,
+      "properties": {
+        "zh": { "type": "string", "minLength": 1 },
+        "ja": { "type": "string", "minLength": 1 }
+      }
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$"
+    },
+    "slot": {
+      "title": "Slot",
+      "type": "object",
+      "required": ["id", "order", "label", "meaning", "x", "y"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "order": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "抽牌落位的次序。第 n 张抽到的牌进入 order = n 的位置。"
+        },
+        "label": { "$ref": "#/$defs/localized", "description": "位置名，如「主人公の現在 / 主角的现在」。" },
+        "meaning": { "$ref": "#/$defs/localized", "description": "位置含义，供解读面板与模板 {meaning} 使用。" },
+        "x": { "type": "integer", "minimum": 0, "description": "牌桌横向格坐标，0 在最左。" },
+        "y": { "type": "integer", "minimum": 0, "description": "牌桌纵向格坐标，0 在最上。" },
+        "question": {
+          "$ref": "#/$defs/localized",
+          "description": "该位置自身的引导问句，供模板 {slotQuestion} 使用。可选，缺省时该词替换为空串。"
+        }
+      }
+    }
+  }
+}
