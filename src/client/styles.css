@@ -645,30 +645,6 @@ select {
   color: var(--c-muted);
 }
 
-.reading-fields {
-  display: grid;
-  grid-template-columns: 108px minmax(0, 1fr);
-  gap: 6px 12px;
-  margin: 10px 0 0;
-}
-
-.reading-fields dt {
-  color: var(--c-muted);
-  font-size: 12.5px;
-}
-
-.reading-fields dd {
-  margin: 0;
-  font-size: 14px;
-}
-
-.reading-prompt {
-  padding: 8px 10px;
-  border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--c-accent) 12%, transparent);
-  border: 1px solid color-mix(in srgb, var(--c-accent) 35%, transparent);
-}
-
 /* --------------------------------------------------------- side panels */
 
 .side-panel {
@@ -1082,13 +1058,6 @@ select {
   font-size: 13px;
 }
 
-.placeholder-chip {
-  display: inline-block;
-  margin: 0 4px 3px 0;
-  background: color-mix(in srgb, var(--c-accent) 16%, transparent);
-  color: var(--c-text);
-}
-
 .copy-table {
   display: flex;
   flex-direction: column;
@@ -1348,14 +1317,6 @@ select {
   .toolbar-field,
   .toolbar-field.is-seed {
     min-width: 100%;
-  }
-
-  .reading-fields {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .reading-fields dt {
-    margin-top: 4px;
   }
 
   .copy-row {

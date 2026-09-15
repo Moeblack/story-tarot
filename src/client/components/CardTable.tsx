@@ -7,15 +7,13 @@ import { EmptyState, ErrorPane } from './Status';
 
 export function CardTable() {
   const app = useApp();
-  const { t, tx } = useI18n();
-  const { result, catalog } = app;
+  const { t } = useI18n();
+  const { result } = app;
 
   const grid = useMemo(() => computeGrid(result?.cards.map((drawn) => drawn.slot) ?? []), [result]);
 
-  const interpretation =
-    catalog?.interpretations.find((item) => item.id === result?.interpretationId) ?? app.interpretation;
-  const uprightLabel = tx(interpretation?.orientations.upright) || t('table.uprightBadge');
-  const reversedLabel = tx(interpretation?.orientations.reversed) || t('table.reversedBadge');
+  const uprightLabel = t('table.uprightBadge');
+  const reversedLabel = t('table.reversedBadge');
 
   if (app.drawError) {
     return <ErrorPane message={app.drawError} onRetry={app.draw} />;

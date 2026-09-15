@@ -127,40 +127,6 @@ export function DeckForm({ value, onChange }: DeckFormProps) {
                 onChange={(symbol) => updateCard(index, { ...card, symbol })}
               />
             </div>
-
-            <div className="form-grid">
-              <LocalizedField
-                label={t('concepts.upright')}
-                value={card.upright}
-                rows={2}
-                onChange={(upright) => updateCard(index, { ...card, upright })}
-              />
-              <LocalizedField
-                label={t('concepts.reversed')}
-                value={card.reversed}
-                rows={2}
-                onChange={(reversed) => updateCard(index, { ...card, reversed })}
-              />
-            </div>
-
-            <div className="form-grid">
-              <LocalizedField
-                label={`${t('concepts.question')} · ${t('concepts.upright')}`}
-                value={card.questions.upright}
-                rows={2}
-                onChange={(question) =>
-                  updateCard(index, { ...card, questions: { ...card.questions, upright: question } })
-                }
-              />
-              <LocalizedField
-                label={`${t('concepts.question')} · ${t('concepts.reversed')}`}
-                value={card.questions.reversed}
-                rows={2}
-                onChange={(question) =>
-                  updateCard(index, { ...card, questions: { ...card.questions, reversed: question } })
-                }
-              />
-            </div>
           </Accordion>
         ))}
       </div>

@@ -26,7 +26,6 @@ import type {
   Deck,
   DrawResult,
   HistoryEntry,
-  Interpretation,
   Language,
   Layout,
   ReversedProbability,
@@ -34,7 +33,7 @@ import type {
 } from '../shared/types';
 
 export type CatalogStatus = 'loading' | 'ready' | 'error';
-export type ConceptKind = 'decks' | 'layouts' | 'interpretations' | 'themes';
+export type ConceptKind = 'decks' | 'layouts' | 'themes';
 
 export interface Toast {
   id: number;
@@ -46,7 +45,6 @@ export interface DrawOverride {
   seed?: string;
   deckId?: string;
   layoutId?: string;
-  interpretationId?: string;
 }
 
 export interface AppValue {
@@ -58,11 +56,9 @@ export interface AppValue {
 
   deckId: string;
   layoutId: string;
-  interpretationId: string;
   themeId: string;
   setDeckId(id: string): void;
   setLayoutId(id: string): void;
-  setInterpretationId(id: string): void;
   setThemeId(id: string): void;
 
   seed: string;
@@ -91,7 +87,6 @@ export interface AppValue {
 
   deck: Deck | undefined;
   layout: Layout | undefined;
-  interpretation: Interpretation | undefined;
   theme: Theme | undefined;
 
   history: HistoryEntry[];
@@ -133,7 +128,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const [deckId, setDeckId] = useState(initialUrl.deck ?? '');
   const [layoutId, setLayoutId] = useState(initialUrl.layout ?? '');
-  const [interpretationId, setInterpretationId] = useState(initialUrl.interpretation ?? '');
   const [themeId, setThemeId] = useState(initialUrl.theme ?? '');
 
   const [seed, setSeed] = useState(initialUrl.seed ?? '');
@@ -178,10 +172,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     () => catalog?.layouts.find((item) => item.id === layoutId),
     [catalog, layoutId],
   );
-  const interpretation = useMemo(
-    () => catalog?.interpretations.find((item) => item.id === interpretationId),
-    [catalog, interpretationId],
-  );
   const theme = useMemo(
     () => catalog?.themes.find((item) => item.id === themeId),
     [catalog, themeId],
@@ -212,9 +202,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!catalog) return;
     setDeckId((prev) => (prev && catalog.decks.some((item) => item.id === prev) ? prev : catalog.defaults.deck));
     setLayoutId((prev) => (prev && catalog.layouts.some((item) => item.id === prev) ? prev : catalog.defaults.layout));
-    setInterpretationId((prev) =>
-      prev && catalog.interpretations.some((item) => item.id === prev) ? prev : catalog.defaults.interpretation,
-    );
     setThemeId((prev) => (prev && catalog.themes.some((item) => item.id === prev) ? prev : catalog.defaults.theme));
   }, [catalog]);
 
@@ -294,15 +281,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setRevealed((prev) => prev.map(() => false));
   }, [stopReveal]);
 
-  const current = useRef({ deckId, layoutId, interpretationId, seed, reversed });
-  current.current = { deckId, layoutId, interpretationId, seed, reversed };
+  const current = useRef({ deckId, layoutId, seed, reversed });
+  current.current = { deckId, layoutId, seed, reversed };
 
   const performDraw = useCallback(
     async (override?: DrawOverride) => {
       const snapshot = current.current;
       const useDeck = override?.deckId ?? snapshot.deckId;
       const useLayout = override?.layoutId ?? snapshot.layoutId;
-      const useInterpretation = override?.interpretationId ?? snapshot.interpretationId;
       if (!useDeck || !useLayout) {
         notify(t('error.draw'), 'error');
         return;
@@ -315,7 +301,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         const next = await api.draw({
           deck: useDeck,
           layout: useLayout,
-          interpretation: useInterpretation || undefined,
           seed: finalSeed,
           reversed: snapshot.reversed,
         });
@@ -365,7 +350,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setReversed(entry.result.reversedProbability);
       setDeckId(entry.result.deckId);
       setLayoutId(entry.result.layoutId);
-      setInterpretationId(entry.result.interpretationId);
       setDrawError(null);
     },
     [stopReveal],
@@ -400,14 +384,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     writeUrlState({
       deck: deckId || undefined,
       layout: layoutId || undefined,
-      interpretation: interpretationId || undefined,
       theme: themeId || undefined,
       seed: result?.seed || seed || undefined,
       reversed,
       lang,
       bilingual,
     });
-  }, [status, deckId, layoutId, interpretationId, themeId, seed, result, reversed, lang, bilingual]);
+  }, [status, deckId, layoutId, themeId, seed, result, reversed, lang, bilingual]);
 
   const shareUrl = useMemo(() => {
     if (typeof window === 'undefined') return '';
@@ -415,7 +398,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       {
         deck: deckId || undefined,
         layout: layoutId || undefined,
-        interpretation: interpretationId || undefined,
         theme: themeId || undefined,
         seed: result?.seed || seed || undefined,
         reversed,
@@ -424,7 +406,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       },
       window.location.href,
     );
-  }, [deckId, layoutId, interpretationId, themeId, seed, result, reversed, lang, bilingual]);
+  }, [deckId, layoutId, themeId, seed, result, reversed, lang, bilingual]);
 
   const exportJson = useCallback(() => {
     if (!result) return;
@@ -463,11 +445,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     applyCatalog,
     deckId,
     layoutId,
-    interpretationId,
     themeId,
     setDeckId,
     setLayoutId,
-    setInterpretationId,
     setThemeId,
     seed,
     setSeed,
@@ -491,7 +471,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setBilingual,
     deck,
     layout,
-    interpretation,
     theme,
     history,
     historyLoading,

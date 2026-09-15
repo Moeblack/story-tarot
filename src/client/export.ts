@@ -23,22 +23,14 @@ export function resultToJson(result: DrawResult): string {
   return `${JSON.stringify(result, null, 2)}\n`;
 }
 
+/** 一张牌只写事实：位置、词、正逆。释义与问句不在数据里，导出也不可能有。 */
 function cardSection(drawn: DrawnCard, index: number, context: ExportContext): string {
   const card = drawn.card;
-  const meaning = drawn.reversed ? card.reversed : card.upright;
-  const question = drawn.reversed ? card.questions.reversed : card.questions.upright;
   const lines: string[] = [];
   lines.push(`## ${index + 1}. ${bilingualOf(drawn.slot.label, context)} — ${bilingualOf(card.word, context)}${card.symbol ? ` ${card.symbol}` : ''}`);
   lines.push('');
   lines.push(`- **${context.t('table.position')}**：${bilingualOf(drawn.slot.label, context)}`);
-  lines.push(`- **${context.t('table.slotMeaning')}**：${bilingualOf(drawn.slot.meaning, context)}`);
   lines.push(`- **${context.t('reading.orientation')}**：${orientationOf(context, drawn.reversed)}`);
-  lines.push(`- **${context.t('reading.cardMeaning')}**：${bilingualOf(meaning, context)}`);
-  if (drawn.slot.question) {
-    lines.push(`- **${context.t('table.slotQuestion')}**：${bilingualOf(drawn.slot.question, context)}`);
-  }
-  lines.push(`- **${context.t('reading.cardQuestion')}**：${bilingualOf(question, context)}`);
-  lines.push(`- **${context.t('reading.prompt')}**：${bilingualOf(drawn.prompt, context)}`);
   lines.push('');
   return lines.join('\n');
 }
@@ -52,7 +44,6 @@ export function resultToMarkdown(result: DrawResult, context: ExportContext): st
   lines.push(`- **${context.t('toolbar.reversed')}**：${result.reversedProbability}%`);
   lines.push(`- **${context.t('toolbar.deck')}**：${loc(result.deckName, context.lang)} (\`${result.deckId}\`)`);
   lines.push(`- **${context.t('toolbar.layout')}**：${loc(result.layoutName, context.lang)} (\`${result.layoutId}\`)`);
-  lines.push(`- **${context.t('toolbar.interpretation')}**：\`${result.interpretationId}\``);
   lines.push(`- **${context.t('table.generated')}**：${new Date().toISOString()}`);
   lines.push('');
   lines.push('---');

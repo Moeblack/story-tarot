@@ -3,7 +3,6 @@ import type { Language, ReversedProbability } from '../shared/types';
 export interface UrlState {
   deck?: string;
   layout?: string;
-  interpretation?: string;
   theme?: string;
   seed?: string;
   reversed?: ReversedProbability;
@@ -17,7 +16,7 @@ export function readUrlState(search: string): UrlState {
   const params = new URLSearchParams(search);
   const state: UrlState = {};
 
-  for (const key of ['deck', 'layout', 'interpretation', 'theme', 'seed'] as const) {
+  for (const key of ['deck', 'layout', 'theme', 'seed'] as const) {
     const value = params.get(key);
     if (value) state[key] = value;
   }
@@ -50,7 +49,6 @@ export function buildUrl(state: UrlState, href: string): string {
 
   put('deck', state.deck);
   put('layout', state.layout);
-  put('interpretation', state.interpretation);
   put('theme', state.theme);
   put('seed', state.seed);
   put('reversed', state.reversed === undefined ? undefined : String(state.reversed));

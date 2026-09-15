@@ -2,7 +2,6 @@ import type {
   Catalog,
   DrawResult,
   HistoryEntry,
-  Interpretation,
   Deck,
   Layout,
   ReversedProbability,
@@ -70,7 +69,6 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
 export interface DrawQuery {
   deck?: string;
   layout?: string;
-  interpretation?: string;
   seed?: string;
   reversed?: ReversedProbability;
 }
@@ -78,7 +76,6 @@ export interface DrawQuery {
 export interface DrawBody {
   deck: Deck | string;
   layout: Layout | string;
-  interpretation?: Interpretation | string;
   seed?: string;
   reversed?: ReversedProbability;
 }
@@ -93,7 +90,6 @@ export const api = {
     const params = new URLSearchParams();
     if (query.deck) params.set('deck', query.deck);
     if (query.layout) params.set('layout', query.layout);
-    if (query.interpretation) params.set('interpretation', query.interpretation);
     if (query.seed) params.set('seed', query.seed);
     if (query.reversed !== undefined) params.set('reversed', String(query.reversed));
     return request<DrawResult>(`/api/draw?${params.toString()}`);
@@ -117,7 +113,7 @@ export const api = {
     request<Catalog>('/api/decks', { method: 'POST', body: JSON.stringify(body) }),
 
   deleteConcept: (
-    kind: 'decks' | 'layouts' | 'interpretations' | 'themes',
+    kind: 'decks' | 'layouts' | 'themes',
     id: string,
   ): Promise<Catalog> =>
     request<Catalog>(`/api/decks/${kind}/${encodeURIComponent(id)}`, { method: 'DELETE' }),

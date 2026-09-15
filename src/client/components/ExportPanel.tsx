@@ -13,8 +13,7 @@ export function ExportPanel() {
   const customInvolved =
     Boolean(app.result) &&
     (app.isCustom('decks', app.result?.deckId ?? '') ||
-      app.isCustom('layouts', app.result?.layoutId ?? '') ||
-      app.isCustom('interpretations', app.result?.interpretationId ?? ''));
+      app.isCustom('layouts', app.result?.layoutId ?? ''));
 
   const share = async (): Promise<void> => {
     try {

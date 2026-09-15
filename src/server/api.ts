@@ -48,7 +48,7 @@ export function createApiRouter({ registry, history }: ApiDependencies): Router 
     res.json({ status: 'ok' });
   });
 
-  // 完整 Catalog（含牌组 / 位置方案 / 解读策略 / 主题 / 文案 / 默认值 / 自定义 id）。
+  // 完整 Catalog（含牌组 / 位置方案 / 主题 / 文案 / 默认值 / 自定义 id）。
   router.get(
     '/decks',
     route(async (_req, res) => {
@@ -63,17 +63,12 @@ export function createApiRouter({ registry, history }: ApiDependencies): Router 
       const seed = readQuery(req.query.seed, 'seed');
       const deck = readQuery(req.query.deck, 'deck');
       const layout = readQuery(req.query.layout, 'layout');
-      const interpretation = readQuery(req.query.interpretation, 'interpretation');
       const reversed = parseReversedProbability(readQuery(req.query.reversed, 'reversed'));
 
       const catalog = await registry.getCatalog();
       const result = draw({
         deck: registry.resolveDeck(catalog, deck ?? catalog.defaults.deck),
         layout: registry.resolveLayout(catalog, layout ?? catalog.defaults.layout),
-        interpretation: registry.resolveInterpretation(
-          catalog,
-          interpretation ?? catalog.defaults.interpretation,
-        ),
         seed: seed === undefined ? randomSeed() : validateSeed(seed),
         reversed,
       });
@@ -90,10 +85,6 @@ export function createApiRouter({ registry, history }: ApiDependencies): Router 
       const result = draw({
         deck: registry.resolveDeck(catalog, body.deck ?? catalog.defaults.deck),
         layout: registry.resolveLayout(catalog, body.layout ?? catalog.defaults.layout),
-        interpretation: registry.resolveInterpretation(
-          catalog,
-          body.interpretation ?? catalog.defaults.interpretation,
-        ),
         seed: body.seed === undefined || body.seed === null ? randomSeed() : validateSeed(body.seed),
         reversed: parseReversedProbability(body.reversed, 'body.reversed'),
       });
@@ -148,7 +139,7 @@ export function createApiRouter({ registry, history }: ApiDependencies): Router 
     route(async (req, res) => {
       const { kind } = req.params;
       if (!isConceptKind(kind)) {
-        failValidation('kind', '必须是 decks、layouts、interpretations 或 themes 之一');
+        failValidation('kind', '必须是 decks、layouts 或 themes 之一');
       }
       res.json(await registry.deleteConcept(kind, req.params.id));
     }),

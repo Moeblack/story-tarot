@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://story-tarot.local/schemas/layout.schema.json",
   "title": "Layout",
-  "description": "一套位置方案（几号位、什么含义、摆在牌桌的哪里）。对应 src/shared/types.ts 的 Layout 与 Slot。抽到的牌按 order 递增落到各位置，永不按牌面重排。",
+  "description": "一套位置方案（几号位、什么名称、摆在牌桌的哪里）。对应 src/shared/types.ts 的 Layout 与 Slot。抽到的牌按 order 递增落到各位置，永不按牌面重排。位置只有编号、名称与坐标：含义与问句不是领域数据。",
   "type": "object",
   "required": ["schemaVersion", "id", "name", "description", "slots"],
   "additionalProperties": false,
@@ -36,7 +36,7 @@
     "slot": {
       "title": "Slot",
       "type": "object",
-      "required": ["id", "order", "label", "meaning", "x", "y"],
+      "required": ["id", "order", "label", "x", "y"],
       "additionalProperties": false,
       "properties": {
         "id": { "$ref": "#/$defs/id" },
@@ -45,14 +45,9 @@
           "minimum": 1,
           "description": "抽牌落位的次序。第 n 张抽到的牌进入 order = n 的位置。"
         },
-        "label": { "$ref": "#/$defs/localized", "description": "位置名，如「主人公の現在 / 主角的现在」。" },
-        "meaning": { "$ref": "#/$defs/localized", "description": "位置含义，供解读面板与模板 {meaning} 使用。" },
+        "label": { "$ref": "#/$defs/localized", "description": "位置名，如「主人公の現在 / 主角的现在」。位置只留名称与坐标，不附含义与问句。" },
         "x": { "type": "integer", "minimum": 0, "description": "牌桌横向格坐标，0 在最左。" },
-        "y": { "type": "integer", "minimum": 0, "description": "牌桌纵向格坐标，0 在最上。" },
-        "question": {
-          "$ref": "#/$defs/localized",
-          "description": "该位置自身的引导问句，供模板 {slotQuestion} 使用。可选，缺省时该词替换为空串。"
-        }
+        "y": { "type": "integer", "minimum": 0, "description": "牌桌纵向格坐标，0 在最上。" }
       }
     }
   }

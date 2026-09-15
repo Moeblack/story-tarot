@@ -3,15 +3,17 @@ import { useApp } from '../state';
 import { cx } from '../util';
 import { EmptyState } from './Status';
 
+/**
+ * 解读面板只列事实：位置、正逆、词。
+ * 牌面上没有释义与问句，这里也不补——联想由使用者自己做。
+ */
 export function ReadingPanel() {
   const app = useApp();
-  const { t, tx } = useI18n();
-  const { result, catalog } = app;
+  const { t } = useI18n();
+  const { result } = app;
 
-  const interpretation =
-    catalog?.interpretations.find((item) => item.id === result?.interpretationId) ?? app.interpretation;
-  const uprightLabel = tx(interpretation?.orientations.upright) || t('table.uprightBadge');
-  const reversedLabel = tx(interpretation?.orientations.reversed) || t('table.reversedBadge');
+  const uprightLabel = t('table.uprightBadge');
+  const reversedLabel = t('table.reversedBadge');
 
   if (!result) {
     return (
@@ -33,8 +35,6 @@ export function ReadingPanel() {
       <ol className="reading-list">
         {result.cards.map((drawn, index) => {
           const card = drawn.card;
-          const meaning = drawn.reversed ? card.reversed : card.upright;
-          const cardQuestion = drawn.reversed ? card.questions.reversed : card.questions.upright;
           const orientationLabel = drawn.reversed ? reversedLabel : uprightLabel;
           return (
             <li
@@ -55,37 +55,6 @@ export function ReadingPanel() {
                 </span>
                 <span className="reading-order">#{drawn.slot.order}</span>
               </header>
-
-              <dl className="reading-fields">
-                <dt>{t('table.slotMeaning')}</dt>
-                <dd>
-                  <Bi value={drawn.slot.meaning} />
-                </dd>
-
-                <dt>{t('reading.cardMeaning')}</dt>
-                <dd>
-                  <Bi value={meaning} />
-                </dd>
-
-                {drawn.slot.question ? (
-                  <>
-                    <dt>{t('table.slotQuestion')}</dt>
-                    <dd>
-                      <Bi value={drawn.slot.question} />
-                    </dd>
-                  </>
-                ) : null}
-
-                <dt>{t('reading.cardQuestion')}</dt>
-                <dd>
-                  <Bi value={cardQuestion} />
-                </dd>
-
-                <dt>{t('reading.prompt')}</dt>
-                <dd className="reading-prompt">
-                  <Bi value={drawn.prompt} block />
-                </dd>
-              </dl>
             </li>
           );
         })}

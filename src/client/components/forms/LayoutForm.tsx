@@ -156,18 +156,6 @@ export function LayoutForm({ value, onChange }: LayoutFormProps) {
               value={slot.label}
               onChange={(label) => updateSlot(index, { ...slot, label })}
             />
-            <LocalizedField
-              label={t('concepts.meaning')}
-              value={slot.meaning}
-              rows={2}
-              onChange={(meaning) => updateSlot(index, { ...slot, meaning })}
-            />
-            <LocalizedField
-              label={`${t('concepts.question')}（${t('common.optional')}）`}
-              value={slot.question ?? { zh: '', ja: '' }}
-              rows={2}
-              onChange={(question) => updateSlot(index, { ...slot, question })}
-            />
           </Accordion>
         ))}
       </div>

@@ -11,7 +11,6 @@
     "deckName",
     "layoutId",
     "layoutName",
-    "interpretationId",
     "seed",
     "reversedProbability",
     "cards"
@@ -24,7 +23,6 @@
     "deckName": { "$ref": "#/$defs/localized" },
     "layoutId": { "type": "string", "minLength": 1 },
     "layoutName": { "$ref": "#/$defs/localized" },
-    "interpretationId": { "type": "string", "minLength": 1 },
     "seed": { "type": "string", "minLength": 1, "description": "实际使用的种子。GET 省略时由服务端生成随机字符串并回显。" },
     "reversedProbability": {
       "enum": [0, 25, 50],
@@ -51,16 +49,12 @@
     "drawnCard": {
       "title": "DrawnCard",
       "type": "object",
-      "required": ["slot", "card", "reversed", "prompt"],
+      "required": ["slot", "card", "reversed"],
       "additionalProperties": false,
       "properties": {
         "slot": { "$ref": "layout.schema.json#/$defs/slot", "description": "这张牌落到的位置。" },
         "card": { "$ref": "deck.schema.json#/$defs/card", "description": "抽到的牌面数据。" },
-        "reversed": { "type": "boolean", "description": "true 为逆位（含义反转），false 为正位。" },
-        "prompt": {
-          "$ref": "#/$defs/localized",
-          "description": "由解读策略 template 插值得到的成句提示：{slot} 位置名、{meaning} 位置含义、{word} 词、{orientation} 正/逆位标签、{interpretation} 该词在该方向的释义、{question} 该词在该方向的问句、{slotQuestion} 位置问句。"
-        }
+        "reversed": { "type": "boolean", "description": "true 为逆位（牌面倒置），false 为正位。逆位只是一次转动，不带任何释义。" }
       }
     }
   }

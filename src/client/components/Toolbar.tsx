@@ -52,21 +52,6 @@ export function Toolbar() {
         </label>
 
         <label className="toolbar-field">
-          <span className="toolbar-label">{t('toolbar.interpretation')}</span>
-          <select
-            value={app.interpretationId}
-            disabled={!catalog}
-            onChange={(event) => app.setInterpretationId(event.target.value)}
-          >
-            {catalog?.interpretations.map((interpretation) => (
-              <option key={interpretation.id} value={interpretation.id}>
-                {decorate(nameOf(interpretation.name), app.isCustom('interpretations', interpretation.id))}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="toolbar-field">
           <span className="toolbar-label">{t('toolbar.theme')}</span>
           <select
             value={app.themeId}

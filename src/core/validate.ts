@@ -14,7 +14,6 @@ import type {
   Deck,
   DrawResult,
   DrawnCard,
-  Interpretation,
   Layout,
   Localized,
   ReversedProbability,
@@ -98,18 +97,12 @@ export function validateLocalized(value: unknown, path: string, maxLength: numbe
   };
 }
 
+/** 牌面只有 id / word / symbol：多余键（含旧版的释义与问句）在这里被丢弃。 */
 export function validateCard(value: unknown, path = 'card'): Card {
   const record = asRecord(value, path);
-  const questions = asRecord(record.questions, `${path}.questions`);
   const card: Card = {
     id: validateId(record.id, `${path}.id`),
     word: validateLocalized(record.word, `${path}.word`, 200),
-    upright: validateLocalized(record.upright, `${path}.upright`, 2000),
-    reversed: validateLocalized(record.reversed, `${path}.reversed`, 2000),
-    questions: {
-      upright: validateLocalized(questions.upright, `${path}.questions.upright`, 1000),
-      reversed: validateLocalized(questions.reversed, `${path}.questions.reversed`, 1000),
-    },
   };
   if (record.symbol !== undefined && record.symbol !== null && record.symbol !== '') {
     card.symbol = requireString(record.symbol, `${path}.symbol`, 32);
@@ -135,18 +128,14 @@ export function validateDeck(value: unknown, path = 'deck'): Deck {
 
 export function validateSlot(value: unknown, path: string): Slot {
   const record = asRecord(value, path);
-  const slot: Slot = {
+  // 位置只保留名称与坐标：meaning / question 等解释性键在这里被丢弃。
+  return {
     id: validateId(record.id, `${path}.id`),
     order: requireNumber(record.order, `${path}.order`),
     label: validateLocalized(record.label, `${path}.label`, 200),
-    meaning: validateLocalized(record.meaning, `${path}.meaning`, 1000),
     x: requireNumber(record.x, `${path}.x`),
     y: requireNumber(record.y, `${path}.y`),
   };
-  if (record.question !== undefined && record.question !== null) {
-    slot.question = validateLocalized(record.question, `${path}.question`, 1000);
-  }
-  return slot;
 }
 
 export function validateLayout(value: unknown, path = 'layout'): Layout {
@@ -167,22 +156,6 @@ export function validateLayout(value: unknown, path = 'layout'): Layout {
     name: validateLocalized(record.name, `${path}.name`, 200),
     description: validateLocalized(record.description, `${path}.description`, 2000),
     slots,
-  };
-}
-
-export function validateInterpretation(value: unknown, path = 'interpretation'): Interpretation {
-  const record = asRecord(value, path);
-  if (record.schemaVersion !== 1) failValidation(`${path}.schemaVersion`, '必须是 1');
-  const orientations = asRecord(record.orientations, `${path}.orientations`);
-  return {
-    schemaVersion: 1,
-    id: validateId(record.id, `${path}.id`),
-    name: validateLocalized(record.name, `${path}.name`, 200),
-    template: validateLocalized(record.template, `${path}.template`, 2000),
-    orientations: {
-      upright: validateLocalized(orientations.upright, `${path}.orientations.upright`, 200),
-      reversed: validateLocalized(orientations.reversed, `${path}.orientations.reversed`, 200),
-    },
   };
 }
 
@@ -233,9 +206,6 @@ export function validateSaveConcepts(value: unknown, path = 'body'): SaveConcept
   if (record.layout !== undefined && record.layout !== null) {
     concepts.layout = validateLayout(record.layout, `${path}.layout`);
   }
-  if (record.interpretation !== undefined && record.interpretation !== null) {
-    concepts.interpretation = validateInterpretation(record.interpretation, `${path}.interpretation`);
-  }
   if (record.theme !== undefined && record.theme !== null) {
     concepts.theme = validateTheme(record.theme, `${path}.theme`);
   }
@@ -243,7 +213,7 @@ export function validateSaveConcepts(value: unknown, path = 'body'): SaveConcept
     concepts.copy = validateCopy(record.copy, `${path}.copy`);
   }
   if (Object.keys(concepts).length === 0) {
-    failValidation(path, '至少需要提供 deck、layout、interpretation、theme、copy 之一');
+    failValidation(path, '至少需要提供 deck、layout、theme、copy 之一');
   }
   return concepts;
 }
@@ -272,7 +242,6 @@ export function validateDrawnCard(value: unknown, path: string): DrawnCard {
     slot: validateSlot(record.slot, `${path}.slot`),
     card: validateCard(record.card, `${path}.card`),
     reversed,
-    prompt: validateLocalized(record.prompt, `${path}.prompt`, 2000),
   };
 }
 
@@ -294,7 +263,6 @@ export function validateDrawResult(value: unknown, path = 'result'): DrawResult 
     deckName: validateLocalized(record.deckName, `${path}.deckName`, 200),
     layoutId: validateId(record.layoutId, `${path}.layoutId`),
     layoutName: validateLocalized(record.layoutName, `${path}.layoutName`, 200),
-    interpretationId: validateId(record.interpretationId, `${path}.interpretationId`),
     seed: validateSeed(record.seed, `${path}.seed`),
     reversedProbability,
     cards,

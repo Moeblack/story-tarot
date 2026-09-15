@@ -99,7 +99,7 @@ async function main(): Promise<void> {
     `[story-tarot] ${isDevelopment ? '开发' : '生产'}模式已启动：${origin}（root=${config.root}）`,
   );
   console.log(
-    `[story-tarot] 已装载 ${catalog.decks.length} 套牌组 / ${catalog.layouts.length} 套位置方案 / ${catalog.interpretations.length} 套解读策略。`,
+    `[story-tarot] 已装载 ${catalog.decks.length} 套牌组 / ${catalog.layouts.length} 套位置方案 / ${catalog.themes.length} 套主题。`,
   );
   console.log(`[story-tarot] 试抽一张：${origin}/api/draw?seed=demo`);
 }

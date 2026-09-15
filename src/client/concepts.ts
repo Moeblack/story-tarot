@@ -2,7 +2,6 @@ import type {
   Card,
   Copy,
   Deck,
-  Interpretation,
   Layout,
   Localized,
   Slot,
@@ -21,20 +20,7 @@ function asCard(value: unknown, index: number): Card {
   if (!isPlainObject(value)) throw new Error(`card[${index}] must be an object`);
   if (typeof value.id !== 'string') throw new Error(`card[${index}].id must be a string`);
   if (!isLocalized(value.word)) throw new Error(`card[${index}].word must be {zh,ja}`);
-  if (!isLocalized(value.upright)) throw new Error(`card[${index}].upright must be {zh,ja}`);
-  if (!isLocalized(value.reversed)) throw new Error(`card[${index}].reversed must be {zh,ja}`);
-  if (!isPlainObject(value.questions)) throw new Error(`card[${index}].questions must be an object`);
-  if (!isLocalized(value.questions.upright)) throw new Error(`card[${index}].questions.upright must be {zh,ja}`);
-  if (!isLocalized(value.questions.reversed)) throw new Error(`card[${index}].questions.reversed must be {zh,ja}`);
-  const symbol = typeof value.symbol === 'string' ? value.symbol : '';
-  return {
-    id: value.id,
-    word: value.word,
-    symbol,
-    upright: value.upright,
-    reversed: value.reversed,
-    questions: { upright: value.questions.upright, reversed: value.questions.reversed },
-  };
+  return { id: value.id, word: value.word, symbol: typeof value.symbol === 'string' ? value.symbol : '' };
 }
 
 function asSlot(value: unknown, index: number): Slot {
@@ -42,19 +28,9 @@ function asSlot(value: unknown, index: number): Slot {
   if (typeof value.id !== 'string') throw new Error(`slot[${index}].id must be a string`);
   if (!isFiniteNumber(value.order)) throw new Error(`slot[${index}].order must be a number`);
   if (!isLocalized(value.label)) throw new Error(`slot[${index}].label must be {zh,ja}`);
-  if (!isLocalized(value.meaning)) throw new Error(`slot[${index}].meaning must be {zh,ja}`);
   if (!isFiniteNumber(value.x)) throw new Error(`slot[${index}].x must be a number`);
   if (!isFiniteNumber(value.y)) throw new Error(`slot[${index}].y must be a number`);
-  const slot: Slot = {
-    id: value.id,
-    order: value.order,
-    label: value.label,
-    meaning: value.meaning,
-    x: value.x,
-    y: value.y,
-  };
-  if (isLocalized(value.question)) slot.question = value.question;
-  return slot;
+  return { id: value.id, order: value.order, label: value.label, x: value.x, y: value.y };
 }
 
 export function asDeck(value: unknown): Deck {
@@ -84,23 +60,6 @@ export function asLayout(value: unknown): Layout {
     name: value.name,
     description: value.description,
     slots: value.slots.map(asSlot),
-  };
-}
-
-export function asInterpretation(value: unknown): Interpretation {
-  if (!isPlainObject(value)) throw new Error('interpretation must be an object');
-  if (typeof value.id !== 'string') throw new Error('interpretation.id must be a string');
-  if (!isLocalized(value.name)) throw new Error('interpretation.name must be {zh,ja}');
-  if (!isLocalized(value.template)) throw new Error('interpretation.template must be {zh,ja}');
-  if (!isPlainObject(value.orientations)) throw new Error('interpretation.orientations must be an object');
-  if (!isLocalized(value.orientations.upright)) throw new Error('orientation.upright must be {zh,ja}');
-  if (!isLocalized(value.orientations.reversed)) throw new Error('orientation.reversed must be {zh,ja}');
-  return {
-    schemaVersion: 1,
-    id: value.id,
-    name: value.name,
-    template: value.template,
-    orientations: { upright: value.orientations.upright, reversed: value.orientations.reversed },
   };
 }
 
@@ -139,18 +98,11 @@ function blank(): Localized {
 }
 
 export function emptyCard(id: string): Card {
-  return {
-    id,
-    word: blank(),
-    symbol: '',
-    upright: blank(),
-    reversed: blank(),
-    questions: { upright: blank(), reversed: blank() },
-  };
+  return { id, word: blank(), symbol: '' };
 }
 
 export function emptySlot(id: string, order: number, x: number, y: number): Slot {
-  return { id, order, label: blank(), meaning: blank(), x, y, question: blank() };
+  return { id, order, label: blank(), x, y };
 }
 
 export function emptyDeck(id: string): Deck {
@@ -159,19 +111,6 @@ export function emptyDeck(id: string): Deck {
 
 export function emptyLayout(id: string): Layout {
   return { schemaVersion: 1, id, name: blank(), description: blank(), slots: [emptySlot(`${id}-slot-1`, 1, 1, 1)] };
-}
-
-export function emptyInterpretation(id: string): Interpretation {
-  return {
-    schemaVersion: 1,
-    id,
-    name: blank(),
-    template: { zh: '{slot}｜{word}｜{orientation}｜{question}', ja: '{slot}｜{word}｜{orientation}｜{question}' },
-    orientations: {
-      upright: { zh: '正位', ja: '正位置' },
-      reversed: { zh: '逆位', ja: '逆位置' },
-    },
-  };
 }
 
 export function emptyTheme(id: string): Theme {

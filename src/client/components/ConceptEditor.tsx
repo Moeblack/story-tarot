@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type {
   Copy,
   Deck,
-  Interpretation,
   Layout,
   SaveConcepts,
   Theme,
@@ -11,13 +10,11 @@ import { api, errorMessage } from '../api';
 import {
   asCopy,
   asDeck,
-  asInterpretation,
   asLayout,
   asTheme,
   cloneConcept,
   emptyCopy,
   emptyDeck,
-  emptyInterpretation,
   emptyLayout,
   emptyTheme,
 } from '../concepts';
@@ -30,7 +27,6 @@ import { Accordion, JsonEditor } from './Fields';
 import { Modal } from './Modal';
 import { CopyForm } from './forms/CopyForm';
 import { DeckForm } from './forms/DeckForm';
-import { InterpretationForm } from './forms/InterpretationForm';
 import { LayoutForm } from './forms/LayoutForm';
 import { ThemeForm } from './forms/ThemeForm';
 
@@ -39,7 +35,6 @@ type EditorTab = ConceptKind | 'copy';
 const TABS: ReadonlyArray<{ id: EditorTab; label: string }> = [
   { id: 'decks', label: 'concepts.decks' },
   { id: 'layouts', label: 'concepts.layouts' },
-  { id: 'interpretations', label: 'concepts.interpretations' },
   { id: 'themes', label: 'concepts.themes' },
   { id: 'copy', label: 'concepts.copy' },
 ];
@@ -56,7 +51,6 @@ export function ConceptEditor({ onClose }: ConceptEditorProps) {
   const [tab, setTab] = useState<EditorTab>('decks');
   const [deckDraft, setDeckDraft] = useState<Deck | null>(null);
   const [layoutDraft, setLayoutDraft] = useState<Layout | null>(null);
-  const [interpretationDraft, setInterpretationDraft] = useState<Interpretation | null>(null);
   const [themeDraft, setThemeDraft] = useState<Theme | null>(null);
   const [copyDraft, setCopyDraft] = useState<Copy | null>(null);
   const [dirty, setDirty] = useState(false);
@@ -73,9 +67,6 @@ export function ConceptEditor({ onClose }: ConceptEditorProps) {
       } else if (target === 'layouts') {
         const found = catalog.layouts.find((item) => item.id === id) ?? catalog.layouts[0];
         if (found) setLayoutDraft(cloneConcept(found));
-      } else if (target === 'interpretations') {
-        const found = catalog.interpretations.find((item) => item.id === id) ?? catalog.interpretations[0];
-        if (found) setInterpretationDraft(cloneConcept(found));
       } else if (target === 'themes') {
         const found = catalog.themes.find((item) => item.id === id) ?? catalog.themes[0];
         if (found) setThemeDraft(cloneConcept(found));
@@ -91,7 +82,6 @@ export function ConceptEditor({ onClose }: ConceptEditorProps) {
     if (!catalog) return;
     if (tab === 'decks' && !deckDraft) pickDraft('decks', app.deckId);
     else if (tab === 'layouts' && !layoutDraft) pickDraft('layouts', app.layoutId);
-    else if (tab === 'interpretations' && !interpretationDraft) pickDraft('interpretations', app.interpretationId);
     else if (tab === 'themes' && !themeDraft) pickDraft('themes', app.themeId);
     else if (tab === 'copy' && !copyDraft) pickDraft('copy');
   }, [
@@ -99,37 +89,32 @@ export function ConceptEditor({ onClose }: ConceptEditorProps) {
     tab,
     deckDraft,
     layoutDraft,
-    interpretationDraft,
     themeDraft,
     copyDraft,
     pickDraft,
     app.deckId,
     app.layoutId,
-    app.interpretationId,
     app.themeId,
   ]);
 
-  const draft: Deck | Layout | Interpretation | Theme | Copy | null = useMemo(() => {
+  const draft: Deck | Layout | Theme | Copy | null = useMemo(() => {
     if (tab === 'decks') return deckDraft;
     if (tab === 'layouts') return layoutDraft;
-    if (tab === 'interpretations') return interpretationDraft;
     if (tab === 'themes') return themeDraft;
     return copyDraft;
-  }, [tab, deckDraft, layoutDraft, interpretationDraft, themeDraft, copyDraft]);
+  }, [tab, deckDraft, layoutDraft, themeDraft, copyDraft]);
 
   const draftId = useMemo(() => {
     if (tab === 'decks') return deckDraft?.id ?? '';
     if (tab === 'layouts') return layoutDraft?.id ?? '';
-    if (tab === 'interpretations') return interpretationDraft?.id ?? '';
     if (tab === 'themes') return themeDraft?.id ?? '';
     return 'copy';
-  }, [tab, deckDraft, layoutDraft, interpretationDraft, themeDraft]);
+  }, [tab, deckDraft, layoutDraft, themeDraft]);
 
   const applyJson = useCallback(
     (next: unknown) => {
       if (tab === 'decks') setDeckDraft(asDeck(next));
       else if (tab === 'layouts') setLayoutDraft(asLayout(next));
-      else if (tab === 'interpretations') setInterpretationDraft(asInterpretation(next));
       else if (tab === 'themes') setThemeDraft(asTheme(next));
       else setCopyDraft(asCopy(next));
       setDirty(true);
@@ -141,7 +126,6 @@ export function ConceptEditor({ onClose }: ConceptEditorProps) {
     let payload: SaveConcepts | null = null;
     if (tab === 'decks' && deckDraft) payload = { deck: deckDraft };
     else if (tab === 'layouts' && layoutDraft) payload = { layout: layoutDraft };
-    else if (tab === 'interpretations' && interpretationDraft) payload = { interpretation: interpretationDraft };
     else if (tab === 'themes' && themeDraft) payload = { theme: themeDraft };
     else if (tab === 'copy' && copyDraft) payload = { copy: copyDraft };
     if (!payload) return;
@@ -168,7 +152,6 @@ export function ConceptEditor({ onClose }: ConceptEditorProps) {
       app.applyCatalog(next);
       if (tab === 'decks') setDeckDraft(null);
       else if (tab === 'layouts') setLayoutDraft(null);
-      else if (tab === 'interpretations') setInterpretationDraft(null);
       else setThemeDraft(null);
       setDirty(false);
       app.notify(`${t('concepts.delete')} ✓`);
@@ -187,7 +170,6 @@ export function ConceptEditor({ onClose }: ConceptEditorProps) {
       app.applyCatalog(next);
       setDeckDraft(null);
       setLayoutDraft(null);
-      setInterpretationDraft(null);
       setThemeDraft(null);
       setCopyDraft(null);
       setDirty(false);
@@ -205,10 +187,6 @@ export function ConceptEditor({ onClose }: ConceptEditorProps) {
       setDeckDraft(emptyDeck(uniqueId('custom-deck', catalog.decks.map((item) => item.id))));
     } else if (tab === 'layouts') {
       setLayoutDraft(emptyLayout(uniqueId('custom-layout', catalog.layouts.map((item) => item.id))));
-    } else if (tab === 'interpretations') {
-      setInterpretationDraft(
-        emptyInterpretation(uniqueId('custom-interpretation', catalog.interpretations.map((item) => item.id))),
-      );
     } else if (tab === 'themes') {
       setThemeDraft(emptyTheme(uniqueId('custom-theme', catalog.themes.map((item) => item.id))));
     } else {
@@ -226,13 +204,6 @@ export function ConceptEditor({ onClose }: ConceptEditorProps) {
     } else if (tab === 'layouts' && layoutDraft) {
       setLayoutDraft(
         cloneConcept({ ...layoutDraft, id: uniqueId(`${layoutDraft.id}-copy`, catalog.layouts.map((item) => item.id)) }),
-      );
-    } else if (tab === 'interpretations' && interpretationDraft) {
-      setInterpretationDraft(
-        cloneConcept({
-          ...interpretationDraft,
-          id: uniqueId(`${interpretationDraft.id}-copy`, catalog.interpretations.map((item) => item.id)),
-        }),
       );
     } else if (tab === 'themes' && themeDraft) {
       setThemeDraft(
@@ -269,8 +240,6 @@ export function ConceptEditor({ onClose }: ConceptEditorProps) {
     if (!catalog) return [];
     if (tab === 'decks') return catalog.decks.map((item) => ({ id: item.id, name: item.name, custom: app.isCustom('decks', item.id) }));
     if (tab === 'layouts') return catalog.layouts.map((item) => ({ id: item.id, name: item.name, custom: app.isCustom('layouts', item.id) }));
-    if (tab === 'interpretations')
-      return catalog.interpretations.map((item) => ({ id: item.id, name: item.name, custom: app.isCustom('interpretations', item.id) }));
     if (tab === 'themes') return catalog.themes.map((item) => ({ id: item.id, name: item.name, custom: app.isCustom('themes', item.id) }));
     return [{ id: 'copy', name: undefined, custom: false }];
   }, [catalog, tab, app.isCustom]);
@@ -385,16 +354,6 @@ export function ConceptEditor({ onClose }: ConceptEditorProps) {
                 value={layoutDraft}
                 onChange={(next) => {
                   setLayoutDraft(next);
-                  setDirty(true);
-                }}
-              />
-            ) : null}
-
-            {tab === 'interpretations' && interpretationDraft ? (
-              <InterpretationForm
-                value={interpretationDraft}
-                onChange={(next) => {
-                  setInterpretationDraft(next);
                   setDirty(true);
                 }}
               />

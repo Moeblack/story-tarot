@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://story-tarot.local/schemas/deck.schema.json",
   "title": "Deck",
-  "description": "一副牌组。对应 src/shared/types.ts 的 Deck。牌组的全部领域数据必须来自此结构，代码不得硬编码任何一张牌。",
+  "description": "一副牌组。对应 src/shared/types.ts 的 Deck。牌组的全部领域数据必须来自此结构，代码不得硬编码任何一张牌。牌面只有词（与可选装饰符号）：释义、逆位释义与引导问句不是领域数据，联想由使用者自己做。",
   "type": "object",
   "required": ["schemaVersion", "id", "name", "description", "cards"],
   "additionalProperties": false,
@@ -37,26 +37,14 @@
     "card": {
       "title": "Card",
       "type": "object",
-      "required": ["id", "word", "upright", "reversed", "questions"],
+      "required": ["id", "word"],
       "additionalProperties": false,
       "properties": {
         "id": { "$ref": "#/$defs/id" },
-        "word": { "$ref": "#/$defs/localized", "description": "牌面上的词。原版卢恩以日文原词为准，中文为对照。" },
+        "word": { "$ref": "#/$defs/localized", "description": "牌面上的词，也是牌上唯一的内容。原版卢恩以日文原词为准，中文为对照。" },
         "symbol": {
           "type": "string",
           "description": "装饰符号（卢恩符文、罗马编号或几何字符），无实质含义。可选。"
-        },
-        "upright": { "$ref": "#/$defs/localized", "description": "正位释义。为本应用创作，不冒充任何原著。" },
-        "reversed": { "$ref": "#/$defs/localized", "description": "逆位释义，含义反转。" },
-        "questions": {
-          "type": "object",
-          "required": ["upright", "reversed"],
-          "additionalProperties": false,
-          "description": "正位与逆位各一条引导问句。",
-          "properties": {
-            "upright": { "$ref": "#/$defs/localized" },
-            "reversed": { "$ref": "#/$defs/localized" }
-          }
         }
       }
     }

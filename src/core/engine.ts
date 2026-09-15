@@ -2,19 +2,18 @@
  * 抽卡引擎：纯函数，不触碰文件系统、时间与随机源。
  *
  * 规则（SPEC 1.3）：
- * - 固定 seed + 同一份领域数据 + 引擎版本 ⇒ 结果完全一致（含逐字可复现的 prompt）；
+ * - 固定 seed + 同一份领域数据 + 引擎版本 ⇒ 结果完全一致；
  * - Fisher–Yates 无重复洗牌，抽取「位置数量」张牌；
  * - 抽到的牌按顺序摆到 order 递增的位置上——永不按牌面调位；
- * - 逆位概率只允许 0 / 25 / 50；
- * - prompt 由 interpretation.template 插值得到，牌面文案一律来自领域数据。
+ * - 逆位概率只允许 0 / 25 / 50。
+ *
+ * 结果只含事实：位置、词、正逆。牌面没有释义，引擎因此不做任何文案插值——
+ * 联想留给使用者，引擎不替他做。
  */
 import type {
-  Card,
   DrawOptions,
   DrawResult,
   DrawnCard,
-  Interpretation,
-  Localized,
   ReversedProbability,
   Slot,
 } from '../shared/types';
@@ -25,64 +24,8 @@ export const ENGINE_VERSION = '1' as const;
 
 export const REVERSED_PROBABILITIES: readonly ReversedProbability[] = [0, 25, 50];
 
-/** template 支持的插值记号，UI 与数据文件都可据此撰写模板。 */
-export const PROMPT_TOKENS = [
-  'slot',
-  'meaning',
-  'word',
-  'orientation',
-  'interpretation',
-  'question',
-  'slotQuestion',
-] as const;
-
-type Orientation = 'upright' | 'reversed';
-
 const MAX_SEED_LENGTH = 256;
 const MAX_SLOTS = 64;
-
-function interpolate(template: string, values: Record<string, string>): string {
-  return template.replace(/\{([A-Za-z]+)\}/g, (match: string, token: string) =>
-    Object.hasOwn(values, token) ? values[token] : match,
-  );
-}
-
-/**
- * 把一张牌摆在一个位置上时生成的引导文案（中日双语）。
- * {orientation} 取自 interpretation.orientations，因此正逆位措辞属于领域数据。
- */
-export function buildPrompt(
-  card: Card,
-  slot: Slot,
-  reversed: boolean,
-  interpretation: Interpretation,
-): Localized {
-  const orientation: Orientation = reversed ? 'reversed' : 'upright';
-  const orientationLabel = interpretation.orientations[orientation];
-  const cardMeaning = card[orientation];
-  const cardQuestion = card.questions[orientation];
-  const slotQuestion = slot.question;
-  return {
-    zh: interpolate(interpretation.template.zh, {
-      slot: slot.label.zh,
-      meaning: slot.meaning.zh,
-      word: card.word.zh,
-      orientation: orientationLabel.zh,
-      interpretation: cardMeaning.zh,
-      question: cardQuestion.zh,
-      slotQuestion: slotQuestion ? slotQuestion.zh : '',
-    }),
-    ja: interpolate(interpretation.template.ja, {
-      slot: slot.label.ja,
-      meaning: slot.meaning.ja,
-      word: card.word.ja,
-      orientation: orientationLabel.ja,
-      interpretation: cardMeaning.ja,
-      question: cardQuestion.ja,
-      slotQuestion: slotQuestion ? slotQuestion.ja : '',
-    }),
-  };
-}
 
 /** 按 order 递增排序（不修改入参）；order 相同时以原始下标稳定排序。 */
 export function orderedSlots(layoutSlots: readonly Slot[]): Slot[] {
@@ -106,7 +49,7 @@ function shuffledIndices(count: number, random: () => number): number[] {
 }
 
 export function draw(options: DrawOptions): DrawResult {
-  const { deck, layout, interpretation, seed, reversed } = options;
+  const { deck, layout, seed, reversed } = options;
 
   if (typeof seed !== 'string' || seed.length === 0) {
     throw new EngineError('seed 必须是非空字符串');
@@ -131,9 +74,6 @@ export function draw(options: DrawOptions): DrawResult {
       `位置数量（${layout.slots.length}）多于牌数（${deck.cards.length}），无法无重复发牌`,
     );
   }
-  if (!interpretation || !interpretation.template) {
-    throw new EngineError('解读策略缺少 template');
-  }
 
   const slots = orderedSlots(layout.slots);
   const random = createRandom(seed);
@@ -144,12 +84,7 @@ export function draw(options: DrawOptions): DrawResult {
     const card = deck.cards[indices[position]];
     // threshold 为 0 时 && 短路，不消耗随机数：0% 与 25%/50% 的洗牌序列因此各自稳定。
     const isReversed = threshold > 0 && random() < threshold;
-    return {
-      slot,
-      card,
-      reversed: isReversed,
-      prompt: buildPrompt(card, slot, isReversed, interpretation),
-    };
+    return { slot, card, reversed: isReversed };
   });
 
   return {
@@ -159,7 +94,6 @@ export function draw(options: DrawOptions): DrawResult {
     deckName: deck.name,
     layoutId: layout.id,
     layoutName: layout.name,
-    interpretationId: interpretation.id,
     seed,
     reversedProbability: reversed,
     cards,

@@ -12,9 +12,9 @@
 | §1.1 24 个卢恩词 | 已实现，逐字照录 | `data/decks/runes24.json` |
 | §1.2 六个位置 | 已实现，顺序与相对位置照录 | `data/layouts/odaiba6.json` |
 | §1.3 抽卡规则（含「不许重排」） | 已实现，规则固化在引擎 | `src/core/engine.ts` |
-| §1.4 授权改编 | 已实现为四个插件点 + 概念编辑器 | `data/**`、编辑器 UI |
+| §1.4 授权改编 | 已实现为三类插件点（牌组 / 位置 / 主题）+ 文案 + 概念编辑器 | `data/**`、编辑器 UI |
 | R1 可维护 | 已实现 | `data/registry.json` + README §5 |
-| R2 可扩展 | 已实现 | 四个插件点、引擎不依赖 UI |
+| R2 可扩展 | 已实现 | 三类插件点、引擎不依赖 UI |
 | R3 功能拉满 | 已实现 | 见 §3 逐项 |
 | R4 JSON API | 已实现 | 见 §4 逐项 |
 | §3 环境与交付 | 已实现 | `package.json` 脚本 + README + 本文件 |
@@ -60,7 +60,7 @@
 
 ### 1.2 六个位置
 
-`data/layouts/odaiba6.json` 的 6 个 slot，含义与相对位置照录：
+`data/layouts/odaiba6.json` 的 6 个 slot，名称与相对位置照录（位置只留名称与坐标，不含含义与问句）：
 
 | order | 日文 | 中文 | 规格相对位置 | `x` | `y` | 牌 id |
 |---|---|---|---|---|---|---|
@@ -82,7 +82,7 @@
 | 洗牌 | 引擎用无重复洗牌：牌组内每张牌最多被抽中一次 |
 | 逐张抽出 6 张，字面朝上 | 按 `slots` 的 `order` 递增，为每位分配一张；抽牌数 = 位置数 |
 | 按抽到的顺序摆到编号位置 | 第 n 张 → `order === n` 的位置，一一对应 |
-| **抽到倒置的牌，保持倒置**（逆位置，含义反转） | `reversed` 由种子与逆位概率在**抽牌时**决定，随后只读；逆位取 `card.reversed` 与其逆位问句 |
+| **抽到倒置的牌，保持倒置**（逆位置，含义反转） | `reversed` 由种子与逆位概率在**抽牌时**决定，随后只读；逆位只把牌面转 180°——牌上没有释义，因此不附任何逆位文本 |
 | **可以无限次重抽，但不许看着牌面为了顺手而重新摆位置——那是犯规** | 「重抽」= 换种子重新洗牌，**不是**把已抽到的牌挪位置；引擎中不存在任何按牌面/按词义排序或调整落位的代码路径 |
 
 最后一条是本应用最在意的约束：引擎**没有任何**「按牌面重排」的入口，
@@ -90,7 +90,7 @@ UI 也**没有**提供拖拽调位的功能——位置只能由洗牌与抽牌�
 「重抽」按钮与分享链接里的 `seed` 是唯一的干预手段，它们的语义是**重新洗牌**，不是调整已有结果。
 
 `draw()` 的输入（`DrawOptions`）与输出（`DrawResult`）都是纯 JSON 可序列化的数据：
-固定 seed + 同一牌组 / 位置 / 解读策略 + 同一引擎版本，结果**完全一致**。
+固定 seed + 同一牌组 / 位置 + 同一引擎版本，结果**完全一致**。
 `DrawResult` 里**不含**任何实时时间字段——时间只出现在 `HistoryEntry.drawnAt`，
 因此同一个 seed 的 HTTP 响应可以逐字一致，而历史依然记录真实时刻。
 
@@ -101,11 +101,10 @@ UI 也**没有**提供拖拽调位的功能——位置只能由洗牌与抽牌�
 
 | 可改编的东西 | 外置位置 | 能不能在界面里改 |
 |---|---|---|
-| 牌面上的词、释义、问句 | `data/decks/*.json` | 能（概念编辑器） |
-| 位置的数量 / 名称 / 含义 / 坐标 / 引导问句 | `data/layouts/*.json` | 能 |
-| 成句模板与正逆位标签 | `data/interpretations/*.json` | 能 |
+| 牌面上的词与装饰符号 | `data/decks/*.json` | 能（概念编辑器） |
+| 位置的数量 / 名称 / 坐标 / 落位次序 | `data/layouts/*.json` | 能 |
 | 配色 | `data/themes/*.json` | 能 |
-| 界面每一句提示语 | `data/copy.json` | 能 |
+| 界面文案：每一句提示语、正位 / 逆位标签文字 | `data/copy.json`（标签在 `table.uprightBadge` / `table.reversedBadge`） | 能 |
 | 导入 / 导出 / 恢复默认 | API `POST /api/decks`、`POST /api/reset` + 编辑器 | 能 |
 
 应用代码里**不存在**任何一张牌的名字、任何一个位置的坐标：`src/` 目录中搜不到「努力」「至誠」「援助者」之类
@@ -126,10 +125,11 @@ UI 也**没有**提供拖拽调位的功能——位置只能由洗牌与抽牌�
 
 ## 3. R2 可扩展
 
-四类插件点各自独立：牌组 `deck`、位置方案 `layout`、解读策略 `interpretation`、主题 `theme`
-（外加文案 `copy`）。它们互不引用，只被 `registry.json` 并列登记，因此：
+三类插件点各自独立：牌组 `deck`、位置方案 `layout`、主题 `theme`（外加文案 `copy`）。它们互不引用，只被 `registry.json` 并列登记，因此：
 
-- 换牌组不动位置，换位置不动牌组，换模板不动前两者；
+> **与规格的偏离（如实记录）**：`SPEC.md` §R2 原文把「解读策略 interpretation」列为四类插件点之一，本实现已把该插件点整体删除——它删掉全部释义 / 问句后只剩「正位 / 逆位」两个标签文字，那是界面文案而不是一个概念，因此标签并入 `data/copy.json`，`data/interpretations/` 目录与 `interpretation` 字段、API 参数、编辑器页签全部消失。
+
+- 换牌组不动位置，换位置不动牌组，换文案（含正逆标签文字）不动前两者；
 - 抽卡引擎 `src/core/engine.ts` 导出 `draw(options: DrawOptions): DrawResult`，**不依赖 UI**，
   API 与界面共用同一个引擎（同一个 seed 得到同一结果）；
 - 规格点名的后续扩展都留了位置：自定义洗牌算法（`src/core/rng.ts` 是唯一随机来源）、
@@ -141,15 +141,15 @@ UI 也**没有**提供拖拽调位的功能——位置只能由洗牌与抽牌�
 | 规格要求 | 实现 |
 |---|---|
 | 按 §1.2 的相对位置渲染 | `Slot.x` / `Slot.y` 网格坐标 → 牌桌渲染，6 位落成「上 4 / 中 3-1-2 / 下 5 / 右 6」 |
-| 逐张翻牌动画、逆位明显可辨 | 客户端翻牌动画；逆位牌面 180° 倒置并带「逆」角标 |
+| 逐张翻牌动画、逆位明显可辨 | 客户端翻牌动画；逆位牌面 180° 倒置并带「正位 / 逆位」角标（文案取自 `data/copy.json` 的 `table.uprightBadge` / `table.reversedBadge`） |
 | 随机 or 指定 seed，seed 可复现 | `seed` 参数贯穿 API / 分享链接 / 历史；同一 seed 同一结果 |
 | 逆位概率可配 0 / 25% / 50% | `reversed` 参数，类型层收窄为 `0 \| 25 \| 50` |
-| 解读面板：位置含义 + 词 + 正逆 + 引导问句 | 逐格卡片 + `prompt` 成句提示（模板占位符见 README §4） |
+| 解读面板：位置 + 词 + 正逆 | 逐格列出位置名、正逆与词；牌面没有释义与问句，面板因此只列事实，不提供任何替代联想 |
 | 历史记录（含 seed、时间、牌面），可回看可删除 | `storage/history.json`；`GET/POST/DELETE /api/history`；时间取自 `drawnAt` |
 | 分享链接携带 deck/layout/seed/reversed | URL 参数；自定义内容需先导入（README §7） |
 | 导出 JSON / Markdown / 结果图片 | 客户端导出模块；Markdown 可直接贴进小说笔记 |
 | 概念编辑器：增删改 + 导入导出 + 恢复默认 | `POST /api/decks`、`POST /api/reset` + 编辑器 UI |
-| 内置多套牌组 | `runes24`（原版）+ `story24`（演示）+ `tarot22`（大阿尔卡纳 22） |
+| 内置多套牌组 | `runes24`（原版）+ `story24`（演示）+ `tarot22`（大阿尔卡纳 22）+ `hanzi24`（24 个汉字，一字一牌） |
 | 中日双语切换 | 全部 `Localized` 字段双语 + 文案双语，界面可切换与对照显示 |
 
 ## 5. R4 JSON API（逐项）
@@ -157,12 +157,12 @@ UI 也**没有**提供拖拽调位的功能——位置只能由洗牌与抽牌�
 | 规格要求 | 实现 |
 |---|---|
 | `GET /api/health` | `{status:"ok"}` |
-| `GET /api/decks` | 返回 Catalog：全部牌组（含每张牌的完整数据）、位置方案、解读策略、主题、文案、默认项、自定义 id |
-| `GET /api/draw?deck&layout&seed&reversed` | 返回 `DrawResult`；另支持 `interpretation`；缺省用 `registry.defaults`，seed 省略时生成随机串并回显；GET 不写历史 |
-| `POST /api/draw` | 请求体 `{deck, layout, seed?, reversed?, interpretation?}`，`deck` / `layout` / `interpretation` 可为 id 字符串或完整对象；对象一次性使用、不落盘 |
+| `GET /api/decks` | 返回 Catalog：全部牌组（含每张牌的完整数据）、位置方案、主题、文案、默认项、自定义 id |
+| `GET /api/draw?deck&layout&seed&reversed` | 返回 `DrawResult`；缺省用 `registry.defaults`，seed 省略时生成随机串并回显；GET 不写历史 |
+| `POST /api/draw` | 请求体 `{deck, layout, seed?, reversed?}`，`deck` / `layout` 可为 id 字符串或完整对象；对象一次性使用、不落盘 |
 | `GET /api/history` | `HistoryEntry[]`，最新优先 |
 | `POST /api/decks` | `SaveConcepts`，按 id upsert，一次请求可保存多种 |
-| 返回结构语义 | `DrawResult` 含 `deckId` / `layoutId` / `seed` / `reversedProbability` / `cards[]`；每张牌含 `slot`（含 `slotLabel` 语义即 `slot.label`）、`word`、正逆释义与问句、`reversed`、`prompt`；时间在历史条目 `drawnAt` |
+| 返回结构语义 | `DrawResult` 含 `deckId` / `layoutId` / `seed` / `reversedProbability` / `cards[]`；每张牌含 `slot`（含 `slotLabel` 语义即 `slot.label`）、`card`（含词与装饰符号）、`reversed`；**没有**释义 / 问句 / `prompt` 字段；时间在历史条目 `drawnAt` |
 | API 必须与 UI 用同一个引擎 | 服务端与客户端都通过 `src/core/engine.ts` 的 `draw()`，UI 的抽卡请求打到 `GET /api/draw` |
 
 `DrawResult` 的字段名以 `src/shared/types.ts` 为准（规格示例里 `slotLabel` / `wordZh` 等扁平字段，
@@ -189,20 +189,21 @@ UI 也**没有**提供拖拽调位的功能——位置只能由洗牌与抽牌�
 
 | 文件 | 内容 | 计数 |
 |---|---|---|
-| `data/registry.json` | 装载清单 + 默认项 | 3 牌组 / 1 位置 / 2 解读 / 2 主题 / 1 文案 |
-| `data/decks/runes24.json` | 原版卢恩 | 24 张牌，每张含中日词、正逆释义、正逆问句 |
-| `data/decks/story24.json` | 演示牌组（努力 / 友情 / 胜利 …） | 24 张牌，同上字段 |
-| `data/decks/tarot22.json` | 塔罗大阿尔卡纳 | 22 张牌，同上字段 |
-| `data/layouts/odaiba6.json` | 原作六位 | 6 个位置，含中日名称 / 含义 / 引导问句 / 坐标 |
-| `data/interpretations/story.json` | 故事提示 | 含 `template`（中日）与正逆位双语标签 |
-| `data/interpretations/oracle.json` | 神谕低语 | 同上 |
+| `data/registry.json` | 装载清单 + 默认项 | 5 牌组 / 1 位置 / 2 主题 / 1 文案 |
+| `data/decks/zh24.json` | 中文二十四（默认牌组） | 24 张牌，每张只有中日词 + 1 个装饰符文 |
+| `data/decks/runes24.json` | 原版卢恩 | 24 张牌，每张只有中日词 + 1 个装饰符文 |
+| `data/decks/story24.json` | 演示牌组（努力 / 友情 / 胜利 …） | 24 张牌，每张只有中日词 + 1 个装饰符号 |
+| `data/decks/tarot22.json` | 塔罗大阿尔卡纳 | 22 张牌，每张只有中日牌名 + 罗马编号符号 |
+| `data/decks/hanzi24.json` | 汉字二十四 | 24 张牌，一字一牌，只有字，无符号、无释义 |
+| `data/layouts/odaiba6.json` | 原作六位 | 6 个位置，只有中日名称 / 坐标 / order |
 | `data/themes/ink.json` · `midnight.json` | 浅色 / 深色主题 | 各 6 个颜色 |
-| `data/copy.json` | 界面文案 | 165 个键，每键 `{zh, ja}` 双语非空 |
+| `data/copy.json` | 界面文案（含正位 / 逆位标签 `table.uprightBadge` / `table.reversedBadge` 等全部界面标签） | 每键 `{zh, ja}` 双语非空 |
 
 三份 JSON Schema 与共享类型的对应关系见 README §10。
 
 ## 9. 声明
 
 - **原始规则不可改**：抽到的牌按抽出顺序落位，看牌不得重排，逆位保持逆位。这条没有开关。
-- **释义与问句为本应用创作**：`runes24` 只照录原书的 24 个词（及其中文对照），其释义、问句、
-  `story24` 与 `tarot22` 的全部内容，都是为故事训练而写的原创文本，**不冒充**《物語の体操》或任何塔罗原著的解释。
+- **牌面上只有词**：`runes24` 只照录原书的 24 个词（及其中文对照），`story24` 与 `tarot22` 只提供词 / 牌名，
+  `hanzi24` 只提供 24 个汉字。释义、逆位释义与引导问句**不是本应用的领域数据**——它们会顶替使用者的联想，
+  把「联想人物和事件」这一步直接做掉，因此整块删除，不做成可选字段。

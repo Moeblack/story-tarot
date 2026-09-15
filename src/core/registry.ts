@@ -11,7 +11,6 @@ import type {
   Catalog,
   Copy,
   Deck,
-  Interpretation,
   Layout,
   SaveConcepts,
   Theme,
@@ -23,13 +22,12 @@ import {
   validateCopy,
   validateDeck,
   validateId,
-  validateInterpretation,
   validateLayout,
   validateSaveConcepts,
   validateTheme,
 } from './validate';
 
-export const CONCEPT_KINDS = ['decks', 'layouts', 'interpretations', 'themes'] as const;
+export const CONCEPT_KINDS = ['decks', 'layouts', 'themes'] as const;
 export type ConceptKind = (typeof CONCEPT_KINDS)[number];
 
 export function isConceptKind(value: unknown): value is ConceptKind {
@@ -40,7 +38,6 @@ interface StoredConcepts {
   schemaVersion: 1;
   decks: Deck[];
   layouts: Layout[];
-  interpretations: Interpretation[];
   themes: Theme[];
   copy?: Copy;
 }
@@ -48,10 +45,9 @@ interface StoredConcepts {
 interface BaseData {
   decks: Deck[];
   layouts: Layout[];
-  interpretations: Interpretation[];
   themes: Theme[];
   copy: Copy;
-  defaults: { deck: string; layout: string; interpretation: string; theme: string };
+  defaults: { deck: string; layout: string; theme: string };
 }
 
 export interface RegistryOptions {
@@ -60,7 +56,7 @@ export interface RegistryOptions {
 }
 
 function emptyConcepts(): StoredConcepts {
-  return { schemaVersion: 1, decks: [], layouts: [], interpretations: [], themes: [] };
+  return { schemaVersion: 1, decks: [], layouts: [], themes: [] };
 }
 
 function emptyCopy(): Copy {
@@ -115,7 +111,6 @@ function readStoredItems<T>(
 function mergeCatalog(base: BaseData, stored: StoredConcepts): Catalog {
   const decks = mergeById(base.decks, stored.decks);
   const layouts = mergeById(base.layouts, stored.layouts);
-  const interpretations = mergeById(base.interpretations, stored.interpretations);
   const themes = mergeById(base.themes, stored.themes);
   const copy: Copy = stored.copy
     ? { schemaVersion: 1, labels: { ...base.copy.labels, ...stored.copy.labels } }
@@ -123,19 +118,16 @@ function mergeCatalog(base: BaseData, stored: StoredConcepts): Catalog {
   return {
     decks,
     layouts,
-    interpretations,
     themes,
     copy,
     defaults: {
       deck: pickDefaultId(base.defaults.deck, decks, '牌组'),
       layout: pickDefaultId(base.defaults.layout, layouts, '位置方案'),
-      interpretation: pickDefaultId(base.defaults.interpretation, interpretations, '解读策略'),
       theme: pickDefaultThemeId(base.defaults.theme, themes),
     },
     customIds: {
       decks: stored.decks.map((item) => item.id),
       layouts: stored.layouts.map((item) => item.id),
-      interpretations: stored.interpretations.map((item) => item.id),
       themes: stored.themes.map((item) => item.id),
     },
   };
@@ -179,15 +171,9 @@ export class ConceptRegistry {
 
     const decks = await this.loadItems(manifest.decks, 'decks', validateDeck);
     const layouts = await this.loadItems(manifest.layouts, 'layouts', validateLayout);
-    const interpretations = await this.loadItems(
-      manifest.interpretations,
-      'interpretations',
-      validateInterpretation,
-    );
     const themes = await this.loadItems(manifest.themes, 'themes', validateTheme);
     if (decks.length === 0) throw new AppError('registry.json 没有提供任何牌组');
     if (layouts.length === 0) throw new AppError('registry.json 没有提供任何位置方案');
-    if (interpretations.length === 0) throw new AppError('registry.json 没有提供任何解读策略');
 
     const copy =
       manifest.copy === undefined || manifest.copy === null
@@ -198,13 +184,11 @@ export class ConceptRegistry {
     return {
       decks,
       layouts,
-      interpretations,
       themes,
       copy,
       defaults: {
         deck: pickDefaultId(declared.deck, decks, '牌组'),
         layout: pickDefaultId(declared.layout, layouts, '位置方案'),
-        interpretation: pickDefaultId(declared.interpretation, interpretations, '解读策略'),
         theme: pickDefaultThemeId(declared.theme, themes),
       },
     };
@@ -266,11 +250,6 @@ export class ConceptRegistry {
         schemaVersion: 1,
         decks: readStoredItems(record.decks, 'storage/concepts.json decks', validateDeck),
         layouts: readStoredItems(record.layouts, 'storage/concepts.json layouts', validateLayout),
-        interpretations: readStoredItems(
-          record.interpretations,
-          'storage/concepts.json interpretations',
-          validateInterpretation,
-        ),
         themes: readStoredItems(record.themes, 'storage/concepts.json themes', validateTheme),
       };
       if (record.copy !== undefined && record.copy !== null) {
@@ -299,15 +278,11 @@ export class ConceptRegistry {
         schemaVersion: 1,
         decks: current.decks,
         layouts: current.layouts,
-        interpretations: current.interpretations,
         themes: current.themes,
       };
       if (current.copy) next.copy = current.copy;
       if (incoming.deck) next.decks = upsertById(current.decks, incoming.deck);
       if (incoming.layout) next.layouts = upsertById(current.layouts, incoming.layout);
-      if (incoming.interpretation) {
-        next.interpretations = upsertById(current.interpretations, incoming.interpretation);
-      }
       if (incoming.theme) next.themes = upsertById(current.themes, incoming.theme);
       if (incoming.copy) next.copy = incoming.copy;
       return next;
@@ -330,7 +305,6 @@ export class ConceptRegistry {
         schemaVersion: 1,
         decks: stored.decks,
         layouts: stored.layouts,
-        interpretations: stored.interpretations,
         themes: stored.themes,
       };
       if (stored.copy) next.copy = stored.copy;
@@ -340,9 +314,6 @@ export class ConceptRegistry {
           break;
         case 'layouts':
           next.layouts = stored.layouts.filter((item) => item.id !== conceptId);
-          break;
-        case 'interpretations':
-          next.interpretations = stored.interpretations.filter((item) => item.id !== conceptId);
           break;
         case 'themes':
           next.themes = stored.themes.filter((item) => item.id !== conceptId);
@@ -368,12 +339,5 @@ export class ConceptRegistry {
   resolveLayout(catalog: Catalog, ref: unknown): Layout {
     if (typeof ref === 'string') return findById(catalog.layouts, validateId(ref, 'layout'), '位置方案');
     return validateLayout(ref, 'layout');
-  }
-
-  resolveInterpretation(catalog: Catalog, ref: unknown): Interpretation {
-    if (typeof ref === 'string') {
-      return findById(catalog.interpretations, validateId(ref, 'interpretation'), '解读策略');
-    }
-    return validateInterpretation(ref, 'interpretation');
   }
 }
