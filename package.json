@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "description": "故事塔罗牌：数据驱动的故事抽卡引擎 + 本地 JSON API + 可视化牌桌",
-  "license": "MIT",
+  "license": "SEE LICENSE IN LICENSE",
   "engines": {
     "node": ">=20.19.0"
   },

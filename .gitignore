@@ -7,3 +7,9 @@ storage/
 .vite/
 .DS_Store
 Thumbs.db
+.cache/
+.npm/
+.env
+.env.*
+!.env.example
+*.tmp

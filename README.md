@@ -333,3 +333,14 @@ curl.exe -s -X POST http://127.0.0.1:5173/api/reset
 - 不做用户系统、不做云端、不做付费、不引入需要外部 API Key 的依赖。
 - 规格 → 实现的逐条对照见 [`docs/spec-implementation.md`](docs/spec-implementation.md)；
   模块分工与 API 契约见 [`docs/architecture.md`](docs/architecture.md)。
+
+## 12. 许可与转载
+
+**版权所有 © 2026 Moeblack，保留所有权利。转载请注明出处：**
+
+- 作者：**Moeblack**
+- 出处：**https://github.com/Moeblack/story-tarot**
+
+除**转载、转发、分享（须注明出处）**外，其余权利由作者保留。
+商业使用、并入其他产品对外发布、修改后以未注明出处的方式再分发等用途，请事先取得书面许可。
+完整条款见 [`LICENSE`](LICENSE)。
